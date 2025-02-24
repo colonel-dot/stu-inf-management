@@ -2,6 +2,8 @@
 #include<stdio.h>
 #include<stdlib.h>
 #include<string.h>
+#include<windows.h>
+
 typedef struct stu {
     char name[20];
     char number[20];
@@ -15,6 +17,7 @@ typedef struct stu {
     struct stu* front;
     struct stu* next;
 }stu;
+
 typedef struct te_account {
     char name[20];
     char account[20];
@@ -22,6 +25,7 @@ typedef struct te_account {
     char find_Psd[20];
     struct te_account* next;
 }tact;
+
 void Free_List(stu** head) {
     stu* temp = *head;
     stu* last = NULL;
@@ -31,6 +35,7 @@ void Free_List(stu** head) {
         temp = last;
     }
 }
+
 void new_File_Input(FILE* fp, int flag) {//输入待注册账号到文件中
     /*char wait1[50] = "待办事项1.学生注册账号\n";
     char wait2[50] = "待办事项1.教师注册账号\n";*/
@@ -79,6 +84,7 @@ void new_File_Input(FILE* fp, int flag) {//输入待注册账号到文件中
         fprintf(fp, "%s %s %s %s", name, account, password, refind);
     }
 }
+
 void account_Register() {
     char t;
     int flag = 0, temp = 0;
@@ -89,12 +95,20 @@ void account_Register() {
     FILE* fps2 = fopen("C:\\Users\\30371\\Desktop\\待办1教师.txt", "a");
     while (1) {
         switch (flag) {
-        case 1:new_File_Input(fps1, flag);
+        case 1:if (!fps1) {
+                    perror("File opening failed:");
+                    return;
+                }
+            new_File_Input(fps1, flag);
             temp = 1;
             fclose(fps1);
             fclose(fps2);
             break;
-        case 2:new_File_Input(fps2, flag);
+        case 2:if (!fps1) {
+                perror("File opening failed:");
+                return;
+            }
+            new_File_Input(fps2, flag);
             temp = 1;
             fclose(fps1);
             fclose(fps2);
@@ -110,6 +124,7 @@ void account_Register() {
     scanf(" %c", &t);
     return;
 }
+
 void te_St_Out(char* name, char* number, int math, int clag, char* act, char* password, char* Find_psd, FILE* fp) {//输出数据到文件中
     double ave = (math + clag) / 2;
     int sum = math + clag;
@@ -121,45 +136,7 @@ void te_St_Out(char* name, char* number, int math, int clag, char* act, char* pa
     fwrite(&ave, sizeof(double), 1, fp);*/
     fprintf(fp, "%s\t%s\t%d\t%d\t%d\t%.2lf\t%s\t%s\t%s\n", name, number, math, clag, sum, ave, act, password, Find_psd);
 }
-void Stu_List(stu** head) {
-    stu* last = NULL, * p = NULL;
-    FILE* fp = fopen("C:\\Users\\30371\\Desktop\\student.txt", "a");
-    system("cls");
-    printf("请依次输入你要增加的学生的姓名，学号，高数成绩，C语言成绩：（按0或9返回上一步）\n");
-    //char name1[20] = "学生姓名\t", number1[20] = "学生学号\t", math1[20] = "高数成绩\t", clag1[20] = "C语言成绩\t", sum1[20] = "总分\t", ave1[20] = "平均分\t";
-    //fprintf(fp, "%s %s %s %s %s %s\n", name1, number1, math1, clag1, sum1, clag1);
-    while (1) {
-        p = (stu*)malloc(sizeof(stu));
-        scanf("%19s", p->name);
-        if (!strcmp(p->name, "9") || !strcmp(p->name, "0")) return;
-        scanf("%19s %d %d", p->number, &p->math, &p->clag);
-        p->ave = 1.0 * (p->math + p->clag) / 2;
-        p->sum = p->math + p->clag;
-        p->next = NULL;
-        p->front = NULL;
-        char name[20] = { 0 }, number[20] = { 0 }, act[20] = { 0 }, password[20] = { 0 }, Find_psd[20] = { 0 };
-        strcpy(name, p->name);
-        strcpy(number, p->number);
-        int math = p->math, clag = p->clag, sum = p->math + p->clag;
-        double ave = p->ave;
-        strcpy(password, "0");
-        strcpy(act, "0");
-        strcpy(Find_psd, "0");
-        te_St_Out(name, number, math, clag, act, password, Find_psd, fp);
-        if (*head) {
-            last = *head;
-            while (last->next) {
-                last = last->next;
-            }
-            last->next = p;
-            p->front = last;
-        }
-        else {
-            *head = p;
-        }
-    }
-    fclose(fp);
-}
+
 void new_Link_File(stu** head, FILE* fps) {//从文件中读取数据到链表中
     stu* p = *head, * last = NULL;
     char name[20] = { 0 }, number[20] = { 0 }, act[20] = { 0 }, psd[20] = { 0 }, psd_Find[10] = { 0 };
@@ -192,11 +169,175 @@ void new_Link_File(stu** head, FILE* fps) {//从文件中读取数据到链表�
     }
     fclose(fps);
 }
+
+int node_Number(int cnt) {//计算学生有多少人数
+    cnt = 0;
+    stu* head = NULL;
+    FILE* fp = fopen("C:\\Users\\30371\\Desktop\\student.txt", "r");
+    if (!fp) {
+        perror("File opening failed:");
+        return 0;
+    }
+    new_Link_File(&head, fp);
+    stu* last = head;
+    while (last) {
+        last = last->next;
+        cnt++;
+    }
+    Free_List(&head);
+    return cnt;
+}
+
+void Stu_List(stu** head) {
+    system("cls");
+    printf("1.顺序增加学生信息  2.任意处增加学生信息\n");
+    int temp = -1;
+    scanf("%d", &temp);
+    while (temp != 1 && temp != 2) {
+        printf("输入违规，请重新输入(输入0返回)");
+        scanf("%d", &temp);
+        if (temp == 0) {
+            return;
+        }
+    }
+    system("cls");
+    if(temp == 1){
+        stu* last = NULL, * p = NULL;
+        FILE* fp = fopen("C:\\Users\\30371\\Desktop\\student.txt", "a");
+        system("cls");
+        printf("请依次输入你要增加的学生的姓名，学号，高数成绩，C语言成绩：（按0或9返回上一步）\n");
+        //char name1[20] = "学生姓名\t", number1[20] = "学生学号\t", math1[20] = "高数成绩\t", clag1[20] = "C语言成绩\t", sum1[20] = "总分\t", ave1[20] = "平均分\t";
+        //fprintf(fp, "%s %s %s %s %s %s\n", name1, number1, math1, clag1, sum1, clag1);
+        while (1) {
+            p = (stu*)malloc(sizeof(stu));
+            scanf("%19s", p->name);
+            if (!strcmp(p->name, "9") || !strcmp(p->name, "0")) return;
+            scanf("%19s %d %d", p->number, &p->math, &p->clag);
+            p->ave = 1.0 * (p->math + p->clag) / 2;
+            p->sum = p->math + p->clag;
+            p->next = NULL;
+            p->front = NULL;
+            char name[20] = { 0 }, number[20] = { 0 }, act[20] = { 0 }, password[20] = { 0 }, Find_psd[20] = { 0 };
+            strcpy(name, p->name);
+            strcpy(number, p->number);
+            int math = p->math, clag = p->clag, sum = p->math + p->clag;
+            double ave = p->ave;
+            strcpy(password, "0");
+            strcpy(act, "0");
+            strcpy(Find_psd, "0");
+            te_St_Out(name, number, math, clag, act, password, Find_psd, fp);
+            if (*head) {
+                last = *head;
+                while (last->next) {
+                    last = last->next;
+                }
+                last->next = p;
+                p->front = last;
+            }
+            else {
+                *head = p;
+            }
+            fclose(fp);
+        }
+    }
+    else {
+        while(1){
+            system("cls");
+            printf("输入需要插入的序号：");
+            int nums = 0, cnt = 0;
+            scanf("%d", &nums);
+            cnt = node_Number(cnt);
+            if (nums <= 0) {
+                printf("插入的位置序号不能小于0,请重新输入或输入0退出：");
+                scanf("%d", &nums);
+            }
+            if (nums > cnt) {
+                printf("班级中一共只有%d名学生，请重新输入或输入0退出：", cnt);
+                scanf("%d", &nums);
+            }
+            printf("\n");
+            if (!nums) {
+                return;
+            }
+            printf("请依次输入你要增加的学生的姓名，学号，高数成绩，C语言成绩：（按0或9返回上一步）\n");
+            char name[20] = { 0 }, number[20] = { 0 }, act[20] = { 0 }, password[20] = { 0 }, Find_psd[20] = { 0 };
+            int math = 0, clag = 0;
+            scanf("%19s %19s %d %d", name, number, &math, &clag);
+            while(math > 100 || math < 0 || clag > 100 || clag < 0){
+				printf("输入的成绩不符合规范，请重新输入高数和C语言成绩\n");
+                scanf("%d %d", &math, &clag);
+			}
+            int len = strlen(number);
+            while (len != 4) {
+				printf("输入的学号不符合规范，请重新输入学号\n");
+				scanf("%19s", number);
+				len = strlen(number);
+            }//规范学号位数，不过目前没有用
+            stu* head = NULL;
+            FILE* fps = fopen("C:\\Users\\30371\\Desktop\\student.txt", "r");
+            if(!fps) {
+				perror("File opening failed:");
+				return;
+			}
+            new_Link_File(&head, fps);
+            FILE * fp = fopen("C:\\Users\\30371\\Desktop\\student.txt", "w");
+            stu* p = (stu*)malloc(sizeof(stu));
+            strcpy(p->name, name);
+            strcpy(p->number, number);
+            strcpy(p->account, "0");
+            strcpy(p->find_Password, "0");
+            strcpy(p->password, "0");
+            p->math = math;
+            p->clag = clag;
+            p->ave = 1.0 * (p->math + p->clag) / 2;
+            p->sum = p->math + p->clag;
+            p->next = NULL;
+            p->front = NULL;
+            stu* last = head, * temp = head;
+            if (nums == 1) {
+                p->next = head;
+                head->front = p;
+                head = p;
+            }
+            else{
+                cnt = 1;
+                while (last){
+                    if (cnt == nums) {
+                        temp->next = p;
+                        last->front = p;
+                        p->next = last;
+                        p->front = temp;
+                        break;
+                    }
+                    temp = last;
+                    last = last->next;
+                    cnt++;
+                }
+            }
+            last = head;
+            while (last) {
+                te_St_Out(last->name, last->number, last->math, last->clag, last->account, last->password, last->find_Password, fp);
+                last = last->next;
+            }
+            fclose(fp);
+            Free_List(&head);
+            printf("插入成功，输入任意字符返回上一级");
+            char flag;
+            scanf(" %c", &flag);
+            return;
+        }
+    }
+}
+
 void Delete_stu() {
     int flag = 0;
     stu* head = NULL, * last = NULL, * p = NULL;
     char temp[20], Find_psd[20] = { 0 };
     FILE* fps = fopen("C:\\Users\\30371\\Desktop\\student.txt", "r");
+    if (!fps) {
+        perror("File opening failed:");
+        return;
+    }
     new_Link_File(&head, fps);
     while (1) {
         system("cls");
@@ -247,11 +388,16 @@ void Delete_stu() {
     Free_List(&head);
     return;
 }
+
 void revise_Stu() {
     int flag = 0, k = 0;
     stu* head = NULL, * last = NULL;
     char temp[20], Find_psd[20] = { 0 };
     FILE* fps = fopen("C:\\Users\\30371\\Desktop\\student.txt", "r");
+    if (!fps) {
+        perror("File opening failed:");
+        return;
+    }
     new_Link_File(&head, fps);
     while (1) {
         system("cls");
@@ -281,6 +427,7 @@ void revise_Stu() {
         }
         printf("选择你要修改的内容：\n1.姓名\n2.学号\n3.高数成绩\n4.C语言成绩\n");
         scanf("%d", &k);
+
         int grade = 0;
         switch (k) {
         case 1:printf("输入%s修改后的姓名\n", last->name);
@@ -288,11 +435,13 @@ void revise_Stu() {
             strcpy(last->name, temp);
             flag = 1;
             break;
+
         case 2:printf("输入%s修改后的学号:\n", last->name);
             scanf("%s", temp);
             strcpy(last->number, temp);
             flag = 1;
             break;
+
         case 3:printf("输入%s修改后的高数成绩：\n", last->name);
             scanf("%d", &grade);
             last->math = grade;
@@ -300,6 +449,7 @@ void revise_Stu() {
             last->sum = last->math + last->clag;
             flag = 1;
             break;
+
         case 4:printf("输入%s修改后的C语言成绩：\n", last->name);
             scanf("%d", &grade);
             last->clag = grade;
@@ -308,6 +458,7 @@ void revise_Stu() {
             flag = 1;
             break;
         }
+
         last = head;
         FILE* fp = fopen("C:\\Users\\30371\\Desktop\\student.txt", "w");
         while (last) {
@@ -320,6 +471,7 @@ void revise_Stu() {
     }
     return;
 }
+
 void quer() {
     system("cls");
     int flag = -1, fr_Next, cnt = 0;
@@ -331,11 +483,17 @@ void quer() {
         printf("输入违规，请重新输入");
         scanf("%d", &flag);
     }
+
     stu* head = NULL;
     stu* last = head;
     FILE* fp = fopen("C:\\Users\\30371\\Desktop\\student.txt", "r");
+    if (!fp) {
+        perror("File opening failed:");
+        return;
+    }
     new_Link_File(&head, fp);
     system("cls");
+
     if (flag == 1) {
         printf("输入你要查询的学生姓名：\n");
         scanf("%s", temp);
@@ -353,7 +511,7 @@ void quer() {
     else {
         last = head;
         while (1) {
-
+            system("cls");
             printf("1.查询前一页 2.查询后一页(按0返回上一层)");
             scanf("%d", &fr_Next);
             if (!fr_Next) {
@@ -396,8 +554,10 @@ void quer() {
             }
         }
     }
+
     Free_List(&head);
 }
+
 void quer_Self(char* act) {
     int flag = 0;
     stu* head = NULL;
@@ -418,21 +578,9 @@ void quer_Self(char* act) {
         return;
     }
 }
-int node_Number(int cnt) {//计算学生有多少人数
-    cnt = 0;
-    stu* head = NULL;
-    FILE* fp = fopen("C:\\Users\\30371\\Desktop\\student.txt", "r");
-    new_Link_File(&head, fp);
-    stu* last = head;
-    while (last) {
-        last = last->next;
-        cnt++;
-    }
-    Free_List(&head);
-    return cnt;
-}
-void print_List(stu** head) {
-    stu* t = *head;
+
+void print_List(stu* head) {
+    stu* t = head;
     char name[20] = "学生姓名", number[20] = "学生学号", math[20] = "高数成绩", clag[20] = "C语言成绩", sum[20] = "总分", ave[20] = "平均分";
     printf("%-20s%-20s%-20s%-17s%-15s%-15s\n", name, number, math, clag, sum, ave);
     while (t) {
@@ -440,6 +588,7 @@ void print_List(stu** head) {
         t = t->next;
     }
 }
+
 void list_Sort() {//链表排序，成绩从高到低
     system("cls");
     stu* head = NULL;
@@ -447,6 +596,10 @@ void list_Sort() {//链表排序，成绩从高到低
     cnt = node_Number(cnt);
     if (cnt <= 2) return;
     FILE* fp = fopen("C:\\Users\\30371\\Desktop\\student.txt", "r");
+    if (!fp) {
+        perror("File opening failed:");
+        return;
+    }
     new_Link_File(&head, fp);
     stu* last = head, * temp = head;
     if (head->sum < head->next->sum) {
@@ -491,12 +644,13 @@ void list_Sort() {//链表排序，成绩从高到低
         }
     }
     system("cls");
-    print_List(&head);
+    print_List(head);
     Free_List(&head);
     char return_Last;
     printf("输入任意字符返回上一级");
     scanf(" %c", &return_Last);
 }
+
 void analy_Grade_Stu(char* act) {
     system("cls");
     int n = 1, cnt = 0;
@@ -505,6 +659,10 @@ void analy_Grade_Stu(char* act) {
     cnt = node_Number(cnt);
     if (cnt <= 2) return;
     FILE* fp = fopen("C:\\Users\\30371\\Desktop\\student.txt", "r");
+    if (!fp) {
+        perror("File opening failed:");
+        return;
+    }
     new_Link_File(&head, fp);
     stu* last = head, * temp = head;
     if (head->sum < head->next->sum) {
@@ -555,6 +713,7 @@ void analy_Grade_Stu(char* act) {
     scanf(" %c", &flag);
     return;
 }
+
 void grade_Appeal(char* act) {
     int flag = 0, revise = 0;
     system("cls");
@@ -574,12 +733,20 @@ void grade_Appeal(char* act) {
     }
     stu* head = NULL;
     FILE* fp = fopen("C:\\Users\\30371\\Desktop\\student.txt", "r");
+    if (!fp) {
+        perror("File opening failed:");
+        return;
+    }
     new_Link_File(&head, fp);
     stu* last = head;
     while (last && strcmp(last->account, act)) {
         last = last->next;
     }
     FILE* fps = fopen("C:\\Users\\30371\\Desktop\\代办3成绩申诉.txt", "a");
+    if (!fps) {
+		perror("File opening failed:");
+		return;
+	}
     if (flag == 1) {
         fprintf(fps, "%s\t%s\t%d\t%d", last->name, math, last->math, revise);
     }
@@ -592,6 +759,7 @@ void grade_Appeal(char* act) {
     }
     Free_List(&head);
 }
+
 void refind_Psd() {
     int math = 0, sum = 0, clag = 0, grade = 0;
     double ave = 0;
@@ -603,7 +771,15 @@ void refind_Psd() {
     printf("\n");
     stu* head = NULL;
     FILE* fp = fopen("C:\\Users\\30371\\Desktop\\student.txt", "r");
+    if (!fp) {
+        perror("File opening failed:");
+        return;
+    }
     FILE* fpr = fopen("C:\\Users\\30371\\Desktop\\密码找回.txt", "a");
+    if(!fpr) {
+		perror("File opening failed:");
+		return;
+	}
     while (fscanf(fp, "%s %s %d %d %d %lf %s %s %s", name, num, &math, &clag, &sum, &ave, act, psd, refind) != EOF) {
         if (!strcmp(act, temp)) {
             printf("输入密保以核实身份：");
@@ -627,6 +803,7 @@ void refind_Psd() {
     scanf(" %c", &flag);
     return;
 }
+
 int stu_Login(int flag, char* act) {
     char psd[20];
     printf("输入你的账号:");
@@ -642,6 +819,10 @@ int stu_Login(int flag, char* act) {
     printf("\n");
     stu* head = NULL;
     FILE* fp = fopen("C:\\Users\\30371\\Desktop\\student.txt", "r");
+    if (!fp) {
+        perror("File opening failed:");
+        return 0;
+    }
     new_Link_File(&head, fp);
     stu* last = head;
     while (last && (strcmp(last->account, act) || strcmp(last->password, psd))) {
@@ -657,6 +838,7 @@ int stu_Login(int flag, char* act) {
     Free_List(&head);
     return flag;
 }
+
 void list_Download() {//文件拷贝
     char address[30] = { 0 }, name[20] = "学生姓名", number[20] = "学生学号", math[20] = "高数成绩", clag[20] = "C语言成绩", sum[20] = "总分", ave[20] = "平均分";
     /*printf("输入文件下载路径");
@@ -704,12 +886,17 @@ void list_Download() {//文件拷贝
     Free_List(&head);
     fclose(fpr);
 }
+
 void analy_Tea() {
     system("cls");
     stu* head = NULL, * prev = NULL;
     int cnt = 0, math_Number = 0, clag_Number = 0;
     cnt = node_Number(cnt);
     FILE* fp = fopen("C:\\Users\\30371\\Desktop\\student.txt", "r");
+    if (!fp) {
+        perror("File opening failed:");
+        return;
+    }
     new_Link_File(&head, fp);
     stu* last = head, * temp = head;
     while (last) {
@@ -722,6 +909,7 @@ void analy_Tea() {
         last = last->next;
     }
     printf("班级中有%.1lf%%的人高数不及格，", 100.0 * math_Number / cnt);
+
     if (100.0 * math_Number / cnt < 20) {
         printf("同学们高数掌握情况较好\n");
     }
@@ -741,6 +929,7 @@ void analy_Tea() {
     scanf(" %c", &t);
     return;
 }
+
 void remind_Op() {
     system("cls");
     int flag = 1;
@@ -753,9 +942,14 @@ void remind_Op() {
         return;
     }
 }
+
 void update() {
     char update;
     FILE* fp = fopen("C:\\Users\\30371\\Desktop\\待办5成绩更新.txt", "r");
+    if (!fp) {
+        perror("File opening failed:");
+        return;
+    }
     if (fscanf(fp, "%c", &update) != EOF) {
         printf("已更新成绩\n");
     }
@@ -763,9 +957,11 @@ void update() {
         printf("无相关更新成绩要求\n");
     }
     fclose(fp);
+
     FILE* fpr = fopen("C:\\Users\\30371\\Desktop\\待办5成绩更新.txt", "w");
     fclose(fpr);
 }
+
 void act_Add_Stu() {
     int temp = 0;
     double ave = 0;
@@ -777,6 +973,7 @@ void act_Add_Stu() {
     fprintf(fp, "%s %s %d %d %d %.2lf %s %s %s", name, name, temp, temp, temp, ave, act, psd, name);
     fclose(fp);
 }
+
 void act_Add_Tea() {
     char act[20] = { 0 }, psd[20] = { 0 };
     FILE* fp = fopen("C:\\Users\\30371\\Desktop\\教师账号密码.txt", "a");
@@ -786,6 +983,7 @@ void act_Add_Tea() {
     fprintf(fp, "%s %s\n", act, psd);
     fclose(fp);
 }
+
 void print_Act() {
     system("cls");
     int math = 0, sum = 0, clag = 0, grade = 0;
@@ -793,6 +991,14 @@ void print_Act() {
     char temp, name[20] = { 0 }, act[20] = { 0 }, psd[20] = { 0 }, num[20] = { 0 }, refind[20] = { 0 };
     FILE* fp_Stu = fopen("C:\\Users\\30371\\Desktop\\student.txt", "r");
     FILE* fp_Tea = fopen("C:\\Users\\30371\\Desktop\\教师账号密码.txt", "r");
+    if (!fp_Stu) {
+        perror("File opening failed:");
+        return;
+    }
+    if (!fp_Tea) {
+        perror("File opening failed:");
+        return;
+    }
     printf("学生账号密码:\n");
     while (fscanf(fp_Stu, "%s %s %d %d %d %lf %s %s %s", name, num, &math, &clag, &sum, &ave, act, psd, refind) != EOF) {
         printf("%s %s %s\n", name, act, psd);
@@ -811,12 +1017,17 @@ void print_Act() {
     }
     return;
 }
+
 void delete_Act() {
     system("cls");
     char act[20] = { 0 };
     printf("输入你要删除的账号：");
     stu* head = NULL;
     FILE* fp = fopen("C:\\Users\\30371\\Desktop\\student.txt", "r");
+    if (!fp) {
+        perror("File opening failed:");
+        return;
+    }
     new_Link_File(&head, fp);
     while (1) {
         scanf("%s", act);
@@ -848,6 +1059,7 @@ void delete_Act() {
             int math = 0, sum = 0, clag = 0, grade = 0;
             last = head;
             double ave = 0;
+
             FILE* fp_Stu = fopen("C:\\Users\\30371\\Desktop\\student.txt", "w");
             while (last) {
                 fprintf(fp_Stu, "%s %s %d %d %d %lf %s %s %s\n", last->name, last->number, last->math, last->clag, last->sum, last->ave, last->account, last->password, last->find_Password);
@@ -859,11 +1071,16 @@ void delete_Act() {
         }
     }
 }
+
 void revise_Act() {
     system("cls");
     char act[20] = { 0 }, psd[20] = { 0 };
     stu* head = NULL;
     FILE* fp = fopen("C:\\Users\\30371\\Desktop\\student.txt", "r");//把文件中的信息复制到链表中
+    if (!fp) {
+        perror("File opening failed:");
+        return;
+    }
     new_Link_File(&head, fp);
     printf("输入你要修改的账号:");
     while (1) {
@@ -896,6 +1113,7 @@ void revise_Act() {
         }
     }
 }
+
 void quer_Act() {
     system("cls");
     int math = 0, sum = 0, clag = 0, grade = 0, flag = -1;
@@ -912,6 +1130,10 @@ void quer_Act() {
     scanf("%s", temp);
     if (flag == 1) {
         FILE* fp = fopen("C:\\Users\\30371\\Desktop\\student.txt", "r");
+        if (!fp) {
+            perror("File opening failed:");
+            return;
+        }
         while (fscanf(fp, "%s %s %d %d %d %lf %s %s %s", name, num, &math, &clag, &sum, &ave, act, psd, refind) != EOF) {
             if (!strcmp(temp, act)) {
                 printf("姓名：%s\t账号：%s\t密码：%s\n", name, act, psd);
@@ -924,6 +1146,10 @@ void quer_Act() {
     }
     else {
         FILE* fp = fopen("C:\\Users\\30371\\Desktop\\教师账号密码.txt", "r");
+        if (!fp) {
+            perror("File opening failed:");
+            return;
+        }
         while (fscanf(fp, "%s %s %s %s", name, act, psd, refind) != EOF) {
             if (!strcmp(temp, act)) {
                 printf("姓名：%s\t账号：%s\t密码：%s\n", name, act, psd);
@@ -936,6 +1162,7 @@ void quer_Act() {
     }
     return;
 }
+
 void stu_Input() {
     system("cls");
     int flag;
@@ -967,6 +1194,7 @@ void stu_Input() {
     fclose(fp);
     return;
 }
+
 void act_Input() {
     int flag;
     system("cls");
@@ -982,7 +1210,8 @@ void act_Input() {
     }
     FILE* fp = fopen("C:\\Users\\30371\\Desktop\\student.txt", "r");
     stu* head = NULL;
-    new_Link_File(&head, fp);
+    new_Link_File(&head, fp); 
+
     stu* last = head;
     int math = 0, sum = 0, clag = 0, grade = 0;
     double ave = 0;
@@ -1008,10 +1237,15 @@ void act_Input() {
     fclose(fpr);
     return;
 }
+
 void psd_Revise(char* act) {
     system("cls");
     char flag, psd[19] = { 0 };
     FILE* fp = fopen("C:\\Users\\30371\\Desktop\\student.txt", "r");
+    if (!fp) {
+        perror("File opening failed:");
+        return;
+    }
     FILE* fp_Write = fopen("C:\\Users\\30371\\Desktop\\学生端密码找回.txt", "a");
     stu* head = NULL;
     new_Link_File(&head, fp);
@@ -1028,15 +1262,21 @@ void psd_Revise(char* act) {
         printf("不符合规范，请重新输入");
         scanf("%18s", psd);
     }
+
     fprintf(fp_Write, "%s %s %s", last->name, last->password, psd);
     fclose(fp_Write);
     printf("修改请求已发送至管理端(输入任意字符返回上一层)");
     scanf(" %c", &flag);
     Free_List(&head);
 }
+
 void te_Link(tact** head) {
     char name[20] = { 0 }, act[20] = { 0 }, psd[20] = { 0 }, psd_Find[10] = { 0 };
     FILE* fp = fopen("C:\\Users\\30371\\Desktop\\教师账号密码.txt", "r");
+    if (!fp) {
+        perror("File opening failed:");
+        return;
+    }
     tact* p = NULL;
     while (fscanf(fp, "%s %s %s %s", name, act, psd, psd_Find) != EOF) {
         p = (tact*)malloc(sizeof(tact));
@@ -1057,6 +1297,7 @@ void te_Link(tact** head) {
         }
     }
 }
+
 void te_Re(char* act_B) {//教师修改密码
     int len;
     char flag = '9', temp[20] = { 0 }, name[20] = { 0 }, act[20] = { 0 }, psd[20] = { 0 }, psd_Re[20] = { 0 }, psd_Find[10] = { 0 };
@@ -1064,6 +1305,10 @@ void te_Re(char* act_B) {//教师修改密码
     scanf("%s", temp);
     printf("\n");
     FILE* fp = fopen("C:\\Users\\30371\\Desktop\\教师账号密码.txt", "r");
+    if (!fp) {
+        perror("File opening failed:");
+        return;
+    }
     while (fscanf(fp, "%s %s %s %s", name, act, psd, psd_Find)) {
         if (!strcmp(act, act_B)) {
             if (!strcmp(temp, psd_Find)) {
@@ -1076,6 +1321,10 @@ void te_Re(char* act_B) {//教师修改密码
                     int len = strlen(psd_Re);
                 }
                 FILE* fpp = fopen("C:\\Users\\30371\\Desktop\\教师密码修改待办.txt", "a");
+                if(!fpp) {
+					perror("File opening failed:");
+					return;
+				}
                 fprintf(fpp, "%s %s %s", name, psd, psd_Re);
                 fclose(fpp);
                 printf("修改申请已提交，等待管理端同意\n");
@@ -1090,14 +1339,20 @@ void te_Re(char* act_B) {//教师修改密码
         }
     }
 }
+
 void to_Do() {
     char flag, name[20] = { 0 }, number[20] = { 0 }, act[20] = { 0 }, psd[20] = { 0 }, psd_Find[10] = { 0 };
     int agree = 0;
     system("cls");
     printf("待办事项:\n");
     printf("\n");
+
     printf("待办事项1.学生注册账号：");
     FILE* fp = fopen("C:\\Users\\30371\\Desktop\\待办1学生.txt", "r");
+    if (!fp) {
+        perror("File opening failed:");
+        return;
+    }
     if (fscanf(fp, "%s %s %s %s %s", name, number, act, psd, psd_Find) != EOF)
     {
         printf("学生姓名\t学生学号\t账号\t\t密码\n");
@@ -1145,11 +1400,16 @@ void to_Do() {
             printf("已驳回账号申请\n");
         }
     }
+
     FILE* fp_Empty_Apy1 = fopen("C:\\Users\\30371\\Desktop\\待办1学生.txt", "w");//清空处理好的文件
     fclose(fp_Empty_Apy1);
     printf("教师注册账号:");
     char act_Tea[20] = { 0 }, psd_Tea[20] = { 0 }, name_Tea[20] = { 0 }, find[20] = { 0 };
     FILE* fpr = fopen("C:\\Users\\30371\\Desktop\\待办1教师.txt", "r");
+    if (!fpr) {
+        perror("File opening failed:");
+        return;
+    }
     while (fscanf(fpr, "%s %s %s %s", name_Tea, act_Tea, psd_Tea, find) != EOF)
     {
         printf("%s %s %s %s\n", name_Tea, act_Tea, psd_Tea, find);
@@ -1175,6 +1435,10 @@ void to_Do() {
     printf("待办2.找回密码申请：\n");
     printf("\n");
     FILE* fp_Find = fopen("C:\\Users\\30371\\Desktop\\密码找回.txt", "r");
+    if (!fp_Find) {
+        perror("File opening failed:");
+        return;
+    }
     if (fscanf(fp_Find, "%s %s %s", name, act, psd_Find) == EOF) {
         printf("暂无密码找回申请\n");
     }
@@ -1211,11 +1475,16 @@ void to_Do() {
     printf("\n");
     FILE* fp_Empty_Re = fopen("C:\\Users\\30371\\Desktop\\密码找回.txt", "w");//清空处理好的文件
     fclose(fp_Empty_Re);
+
     //待办之密码修改
     printf("待办三之密码修改：\n");
     char name_Rev[20] = "学生姓名", psd_Init[20] = "原密码", psd_Rev[20] = "修改后密码";
     char name_R[20] = { 0 }, psd_R[20] = { 0 }, psd_A[20] = { 0 };
     FILE* fp_Psd = fopen("C:\\Users\\30371\\Desktop\\学生端密码修改.txt", "r");
+    if (!fp_Psd) {
+        perror("File opening failed:");
+        return;
+    }
     if (fscanf(fp_Psd, "%s %s %s", name_R, psd_R, psd_A) == EOF) {
         printf("暂无学生修改密码需要\n");
     }
@@ -1236,6 +1505,10 @@ void to_Do() {
         else {
             stu* head = NULL;
             FILE* f = fopen("C:\\Users\\30371\\Desktop\\student.txt", "r");
+            if (!f) {
+                perror("File opening failed:");
+                return;
+            }
             new_Link_File(&head, f);
             stu* last = head;
             while (last && strcmp(last->name, name_R)) {
@@ -1256,14 +1529,19 @@ void to_Do() {
     printf("\n");
     FILE* fp_P = fopen("C:\\Users\\30371\\Desktop\\学生端密码修改.txt", "w");//清空处理过的文件
     fclose(fp_P);
+
     //教师密码修改
     char name_Te[20] = "教师姓名", psd_Be[20] = "原密码", psd_Af[20] = "修改后密码";
     FILE* fp_Te = fopen("C:\\Users\\30371\\Desktop\\教师密码修改待办.txt", "r");
+    if (!fp_Te) {
+        perror("File opening failed:");
+        return;
+    }
     if (fscanf(fp_Te, "%s %s %s", name, act, psd) == EOF) {
         printf("暂无教师修改密码需要\n");
         printf("\n");
     }
-    else{
+    else {
         rewind(fp_Te);
         printf("%-15s%-15s%-15s\n", name_Te, psd_Be, psd_Af);
         while (fscanf(fp_Te, "%s %s %s", name, psd, psd_Af) != EOF) {
@@ -1281,7 +1559,7 @@ void to_Do() {
                 te_Link(&head);
                 tact* last = head;
                 while (last && strcmp(name, last->name)) {
-                        last = last->next;
+                    last = last->next;
                 }
                 strcpy(last->password, psd_Af);
                 last = head;
@@ -1297,7 +1575,7 @@ void to_Do() {
                     free(head);
                     head = last;
                 }
-                FILE*te_Clear = fopen("C:\\Users\\30371\\Desktop\\教师密码修改待办.txt", "w");
+                FILE* te_Clear = fopen("C:\\Users\\30371\\Desktop\\教师密码修改待办.txt", "w");
                 fclose(te_Clear);
                 printf("已修改对应账号密码\n");
             }
@@ -1307,9 +1585,14 @@ void to_Do() {
         }
     }
     printf("\n");
+
     //待办之成绩申诉
     printf("待办四之成绩申诉:\n");
     FILE* fp_Appeal = fopen("C:\\Users\\30371\\Desktop\\代办3成绩申诉.txt", "r");
+    if (!fp_Appeal) {
+        perror("File opening failed:");
+        return;
+    }
     char name_C[20] = "申诉学生姓名", subject_C[20] = "申诉科目", grade_Before[15] = "原成绩", grade_After[15] = "申诉成绩";
     char subject[15] = { 0 }, name_APPeal[20] = { 0 };
     int before = 0, after = 0;
@@ -1327,6 +1610,10 @@ void to_Do() {
         }
         else {
             FILE* fp = fopen("C:\\Users\\30371\\Desktop\\student.txt", "r");
+            if (!fp) {
+                perror("File opening failed:");
+                return;
+            }
             stu* head = NULL;
             new_Link_File(&head, fp);
             stu* last = head;
@@ -1356,13 +1643,77 @@ void to_Do() {
         }
     }
     printf("\n");
+
     //更新成绩
     printf("待办五之成绩更新：\n");
     update();
     printf("\n");
+
     //输出
     printf("(输入任意字符返回上一层)");
     scanf(" %c", &flag);
+    return;
+}
+void grade_Compare() {
+    system("cls");
+    char name1[20] = { 0 }, name2[20] = {0};
+    printf("输入需要对比学生的姓名（仅支持两两对比）：");
+    scanf("%19s %19s", name1, name2);
+    FILE* fp = fopen("C:\\Users\\30371\\Desktop\\student.txt", "r");
+    if (!fp) {
+        perror("File opening failed:");
+        return;
+    }
+    stu* head = NULL;
+    new_Link_File(&head, fp);
+    int math1 = 0, math2 = 0, clag1 = 0, clag2 = 0, flag1 = 0, flag2 = 0;
+    stu* last = head;
+    while (last) {
+        if (!strcmp(last->name, name1)) {
+            math1 = last->math;
+            clag1 = last->clag;
+            flag1 = 1;
+        }
+        if (!strcmp(last->name, name2)) {
+            math2 = last->math;
+            clag2 = last->clag;
+            flag2 = 1;
+        }
+        last = last->next;
+    }
+    if (!flag1 && !flag2) {
+        printf("系统中不存在%s和%s\n", name1, name2);
+    }
+    else if(!flag1){
+        printf("系统中不存在%s\n", name1);
+    }
+    else if (!flag2) {
+        printf("系统中不存在%s\n", name2);
+    }
+    else {
+        if (math1 > math2) {
+            printf("%s的数学成绩更高,相较于%s同学高%d分\n", name1, name2, math1 - math2);
+        }
+        else {
+            printf("%s的数学成绩更高,相较于%s同学高%d分\n", name2, name1, math2 - math1);
+        }
+        if (clag1 > clag2) {
+            printf("%s的C语言成绩更高,相较于%s同学高%d分\n", name1, name2, clag1 - clag2);
+        }
+        else {
+            printf("%s的C语言成绩更高,相较于%s同学高%d分\n", name2, name1, clag2 - clag1);
+        }
+        if (clag1 + math1 > math2 + clag2) {
+            printf("%s的总分更高,相较于%s同学高%d分\n", name1, name2, math1 + clag1 - clag2 - math2);
+        }
+        else {
+            printf("%s的总分更高,相较于%s同学高%d分\n", name2, name1, math2 + clag2 - clag1 - math1);
+        }
+    }
+    Free_List(&head);
+    printf("输入任意字符返回\n");
+    char temp;
+    scanf(" %c", &temp);
     return;
 }
 int main() {
@@ -1372,7 +1723,7 @@ int main() {
     if (fnc == 2) {
         account_Register();
     }
-    char port[20];
+    char port[10];
     do {
         system("cls");
         if (t != 3)
@@ -1406,7 +1757,7 @@ int main() {
                     break;
                 case 6:psd_Revise(act);
                 case 0:return 0;
-                default:printf("违规输入，请重新输入");
+                default:printf("违规输入，请重新输入:");
                 }
                 if (temp == 0) {
                     break;
@@ -1414,9 +1765,9 @@ int main() {
             }
         }
         else if (!strcmp("2", port) || t == 3) {
-            int flag = 0, temp = 1; 
+            int flag = 0, temp = 1;
             char name[20] = { 0 }, act[20] = { 0 }, psd[20] = { 0 }, find[20] = { 0 }, act_Temp[20] = { 0 }, psd_Temp[20] = { 0 };
-            system("cls"); 
+            system("cls");
             if (t != 3) {
                 FILE* fp = fopen("C:\\Users\\30371\\Desktop\\教师账号密码.txt", "r");
                 if (fscanf(fp, "%s %s %s %s", name, act, psd, find) == EOF) {
@@ -1426,22 +1777,48 @@ int main() {
                 }
                 fclose(fp);
                 FILE* fpp = fopen("C:\\Users\\30371\\Desktop\\教师账号密码.txt", "r");
-                printf("输入你的账号：");
-                scanf("%s", act_Temp);
-                printf("\n");
-                printf("输入你的密码：");
-                scanf("%s", psd_Temp);
-                printf("\n");
-                while (fscanf(fp, "%s %s %s %s", name, act, psd, find) != EOF) {
-                    if (!strcmp(act, act_Temp)) {
-                        while (1) {
-                            if (!strcmp(psd, psd_Temp)) {
-                                break;
-                            }
-                            else {
-                                printf("密码错误，请重新输入");
+                while (1) {
+                    printf("输入你的账号：");
+                    scanf("%s", act_Temp);
+                    printf("\n");
+                    printf("输入你的密码：");
+                    scanf("%s", psd_Temp);
+                    printf("\n");
+                    tact* head = NULL;
+                    te_Link(&head);
+                    tact* last = head;
+                    int t = 0;
+                    while (last) {
+                        if (!strcmp(last->account, act_Temp)) {
+                            while (1) {
+                                if (!strcmp(last->password, psd_Temp)) {
+                                    t = 1;
+                                    break;
+                                }
+                                else {
+                                    printf("密码错误，请重新输入:");
+                                    scanf("%s", psd_Temp);
+                                    printf("\n");
+                                }
                             }
                         }
+                        if (t == 1) {
+                            break;
+                        }
+                        last = last->next;
+                    }
+                    if (!last) {
+                        t = -1;
+                        printf("账号有误，请重新输入:");
+                    }
+                    if (t == 1) {
+                        last = head;
+                        while (head) {
+                            last = head->next;
+                            free(head);
+                            head = last;
+                        }
+                        break;
                     }
                 }
             }
@@ -1451,10 +1828,11 @@ int main() {
                 printf("教师端界面\n");
                 printf("选择你要进行的操作:\n");
                 printf("1.增加新的学生信息\n2.删除学生信息\n3.修改学生信息\n4.查询学生信息\n5.输出本班成绩\n");
-                printf("6.下载至文件\n7.成绩分析\n8.提醒管理员进行成绩的更新\n9.返回上一层\n0.退出\n101.修改密码\n");
+                printf("6.下载至文件\n7.成绩分析\n8.提醒管理员进行成绩的更新\n9.返回上一层\n10对比学生成绩\n0.退出\n101.修改密码\n");
                 stu* head = NULL;
                 stu* head2 = NULL;
                 stu* head3 = NULL;
+                printf("\n");
                 scanf("%d", &flag);
                 switch (flag) {
                 case 1:Stu_List(&head);
@@ -1478,7 +1856,11 @@ int main() {
                 case 9:temp = 0;
                     break;
                 case 0:return 0;
+                case 10:grade_Compare();
+                    break;
                 case 101:te_Re(act_Temp);
+                    break;
+                default:printf("输入不合规，请重新输入：");
                 }
                 if (temp == 0) {
                     break;
@@ -1486,12 +1868,30 @@ int main() {
             }
         }
         else if (!strcmp("3", port)) {
+            char act[20] = { 0 }, psd[20] = { 0 };
+            system("cls");
+            //管理员账号：1234567  密码：1234567gao
+            printf("输入你的账号：\n");
+            scanf("%s", act);
+            printf("\n");
+            printf("输入你的密码：");
+            scanf("%s", psd);
+            while (strcmp(act, "1234567") || strcmp(psd, "1234567gao")) {
+                printf("账号或密码有误，请重新输入\n");
+                printf("输入你的账号：\n");
+                scanf("%19s", act);
+                printf("\n");
+                printf("输入你的密码：");
+                scanf("%19s", psd);
+            } 
+
             system("cls");
             printf("管理员端界面");
             printf("选择你要进行的操作:");
             printf("1.查看待办事项\n2.进入教师端进行信息修改\n3.增加账号及密码\n4.删除账号及密码\n5.修改账号及密码\n6.查找账号及密码\n");
             printf("7.录入所有账号及密码\n8.输出所有账号及密码\n9.重新录入所有学生信息\na.返回上一层\n0.退出程序\n");
             char temp;
+
             while (1) {
                 scanf(" %c", &temp);
                 if (temp == '1') {
@@ -1499,8 +1899,49 @@ int main() {
                     break;
                 }
                 else if (temp == '2') {
-                    t = 3;
-                    break;
+                    /*t = 3;
+                    break;*/
+                    while (1) {
+                        t = -1;//避免上次管理员进入后t一直为3
+                        system("cls");
+                        printf("教师端界面\n");
+                        printf("选择你要进行的操作:\n");
+                        printf("1.增加新的学生信息\n2.删除学生信息\n3.修改学生信息\n4.查询学生信息\n5.输出本班成绩\n");
+                        printf("6.下载至文件\n7.成绩分析\n9.返回上一层\n10.成绩对比\n0.退出\n");
+                        stu* head = NULL;
+                        stu* head2 = NULL;
+                        stu* head3 = NULL;
+                        printf("\n");
+                        scanf("%d", &flag);
+                        switch (flag) {
+                        case 1:Stu_List(&head);
+                            Free_List(&head);
+                            break;
+                        case 2:Delete_stu();
+                            Free_List(&head2);
+                            break;
+                        case 3:revise_Stu();
+                            break;
+                        case 4:quer();
+                            break;
+                        case 5:list_Sort();
+                            break;
+                        case 6:list_Download();
+                            break;
+                        case 7:analy_Tea();
+                            break;
+                        case 9:temp = 0;
+                            break;
+                        case 10:grade_Compare();
+                            break;
+                        case 0:return 0;
+                        default:printf("输入不合规，请重新输入：");
+                        
+                        }
+                        if (temp == 0) {
+                            break;
+                        }
+                    }
                 }
                 else if (temp == '3') {
                     printf("选择增加 1.学生账号 2.教师账号");
