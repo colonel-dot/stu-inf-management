@@ -1261,6 +1261,7 @@ void psd_Revise(char* act) {
     while (len_Psd < 6 || len_Psd > 18) {
         printf("不符合规范，请重新输入");
         scanf("%18s", psd);
+        int len_Psd = strlen(psd);
     }
 
     fprintf(fp_Write, "%s %s %s", last->name, last->password, psd);
