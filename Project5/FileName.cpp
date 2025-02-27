@@ -191,17 +191,17 @@ int node_Number(int cnt) {//计算学生有多少人数
 void Stu_List(stu** head) {
     system("cls");
     printf("1.顺序增加学生信息  2.任意处增加学生信息\n");
-    int temp = -1;
-    scanf("%d", &temp);
-    while (temp != 1 && temp != 2) {
+    char temp = '&';
+    scanf(" %c", &temp);
+    while (temp != '1' && temp != '2') {
         printf("输入违规，请重新输入(输入0返回)");
-        scanf("%d", &temp);
-        if (temp == 0) {
+        scanf(" %c", &temp);
+        if (temp == '0') {
             return;
         }
     }
     system("cls");
-    if(temp == 1){
+    if(temp == '1') {
         stu* last = NULL, * p = NULL;
         FILE* fp = fopen("C:\\Users\\30371\\Desktop\\student.txt", "a");
         system("cls");
@@ -351,7 +351,7 @@ void Delete_stu() {
         }
         printf("输入要删除学生的姓名或学号（按0或9返回）:\n");
         scanf("%19s", temp);
-        if (!strcmp(temp, "9") || !strcmp(temp, "0")) break;
+        if (!strcmp(temp, "9") || !strcmp(temp, "0")) return;
         if (head == NULL) {
             printf("学生信息系统为空，请先添加学生信息");
         }
@@ -427,7 +427,7 @@ void revise_Stu() {
         }
         printf("选择你要修改的内容：\n1.姓名\n2.学号\n3.高数成绩\n4.C语言成绩\n");
         scanf("%d", &k);
-
+        
         int grade = 0;
         switch (k) {
         case 1:printf("输入%s修改后的姓名\n", last->name);
@@ -1718,10 +1718,15 @@ void grade_Compare() {
     return;
 }
 int main() {
-    int t = -1, fnc, flag = 0, temp = 1;
+    int t = -1, flag = 0, temp = 1;
+    char fnc;
     printf("1.登录账号 2.注册账号\n");
-    scanf("%d", &fnc);
-    if (fnc == 2) {
+    scanf(" %c", &fnc);
+    while (fnc != '2' && fnc != '1') {
+        printf("输入有误，重新输入：");
+        scanf(" %c", &fnc);
+    }
+    if (fnc == '2') {
         account_Register();
     }
     char port[10];
@@ -1733,6 +1738,10 @@ int main() {
             scanf("%5s", port);
             if (!strcmp(port, "0")) {
                 break;
+            }
+            if (strcmp(port, "0") && strcmp(port, "1") && strcmp(port, "2") && strcmp(port, "3")) {
+                printf("输入有误，请重新输入：");
+                scanf("%5s", port);
             }
         }
         if (!strcmp("1", port)) {
