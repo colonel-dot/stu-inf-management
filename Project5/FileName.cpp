@@ -381,7 +381,7 @@ void Delete_stu() {
     FILE* fp = fopen("C:\\Users\\30371\\Desktop\\student.txt", "w");
     fclose(fp);
     while (last) {
-        FILE* fpr = fopen("C:\\Users\\30371\\Desktop\\student.txt", "a");
+        FILE* fpr = fopen("C:\\Users\\30371\\Desktop\\student.txt", "w");
         te_St_Out(last->name, last->number, last->math, last->clag, last->account, last->password, Find_psd, fpr);
         last = last->next;
     }
@@ -511,7 +511,7 @@ void quer() {
     else {
         last = head;
         while (1) {
-            system("cls");
+            //system("cls");
             printf("1.查询前一页 2.查询后一页(按0返回上一层)");
             scanf("%d", &fr_Next);
             if (!fr_Next) {
