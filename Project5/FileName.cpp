@@ -356,11 +356,11 @@ void Delete_stu() {
             printf("学生信息系统为空，请先添加学生信息");
         }
         last = head;
-        while (strcmp(last->name, temp) != 0 && strcmp(last->number, temp) != 0 && last) {
+        while (last && strcmp(last->name, temp) != 0 && strcmp(last->number, temp) != 0) {
             p = last;
             last = last->next;
         }
-        if (last == NULL || ((!strcmp(head->name, temp) && !strcmp(head->number, temp)))) {
+        if (last == NULL || (!strcmp(head->name, temp) && !strcmp(head->number, temp))) {
             flag = 2;
             continue;
         }
@@ -372,20 +372,20 @@ void Delete_stu() {
         }
         else {
             p->next = last->next;
+			last->next->front = p;
             free(last);
             last = NULL;
             flag = 1;
         }
-    }
-    last = head;
-    FILE* fp = fopen("C:\\Users\\30371\\Desktop\\student.txt", "w");
-    fclose(fp);
-    while (last) {
+        last = head;
         FILE* fpr = fopen("C:\\Users\\30371\\Desktop\\student.txt", "w");
-        te_St_Out(last->name, last->number, last->math, last->clag, last->account, last->password, Find_psd, fpr);
-        last = last->next;
+        while (last) {
+            te_St_Out(last->name, last->number, last->math, last->clag, last->account, last->password, Find_psd, fpr);
+            last = last->next;
+        }
+        fclose(fpr);
+        Free_List(&head);
     }
-    Free_List(&head);
     return;
 }
 
@@ -727,7 +727,7 @@ void grade_Appeal(char* act) {
     }
     printf("输入需要申诉的科目成绩:\n");
     scanf("%d", &revise);
-    while (revise < 0 && revise > 100) {
+    while (revise < 0 || revise > 100) {
         printf("输入分数不符合规范，请重新输入：\n");
         scanf("%d", &revise);
     }
@@ -749,15 +749,17 @@ void grade_Appeal(char* act) {
 	}
     if (flag == 1) {
         fprintf(fps, "%s\t%s\t%d\t%d", last->name, math, last->math, revise);
-    }
+	}
+	else {
+		fprintf(fps, "%s\t%s\t%d\t%d", last->name, clag, last->clag, revise);
+	}
     fclose(fps);
     printf("申诉成功，等待管理员核实处理中");
-    printf("(输入5返回上一级)");
-    scanf("%d", &flag);
-    if (flag == 5) {
-        return;
-    }
+    printf("(输入任意字符返回上一级)");
+    char ff[10];
+    scanf("%s", ff);
     Free_List(&head);
+    return;
 }
 
 void refind_Psd() {
@@ -800,7 +802,8 @@ void refind_Psd() {
         }
     }
     printf("系统没有该账号，输入任意字符返回上一层");
-    scanf(" %c", &flag);
+	char ff[10];
+    scanf("%10s", ff);
     return;
 }
 
